@@ -8,18 +8,16 @@ function shallowCompare(a, b) {
     return [...aKeys, ...bKeys].every(key => a[key] === b[key]);
 }
 
-export default function createModel(model) {
-  const { SpecContext, CommonContext } = getContexts(model);
-
-  const ClassConsumer = CommonContext.Consumer;
+export default function createContainer(useHook) {
+  const { ObservableContext, IntrinsicContext } = getContexts(useHook);
 
   const Provider = function Provider({ initState, children }) {
     const containerRef = useRef();
     if (!containerRef.current) {
-      containerRef.current = new ObservableContext();
+      containerRef.current = new ObservableValue();
     }
 
-    const state = model();
+    const state = useHook();
     containerRef.current.state = state;
 
     useEffect(() => {
@@ -27,19 +25,19 @@ export default function createModel(model) {
     });
 
     return (
-      <CommonContext.Provider value={state}>
-        <SpecContext.Provider value={containerRef.current}>
+      <IntrinsicContext.Provider value={state}>
+        <ObservableContext.Provider value={containerRef.current}>
           {children}
-        </SpecContext.Provider>
-      </CommonContext.Provider>
+        </ObservableContext.Provider>
+      </IntrinsicContext.Provider>
     );
   };
 
   const useModel = function (depCb) {
-    const { SpecContext } = getContexts(model);
+    const { ObservableContext } = getContexts(useHook);
     const sealedDepCp = useCallback(depCb, []);
 
-    const container = useContext(SpecContext);
+    const container = useContext(ObservableContext);
     const [state, setState] = useState(container.state);
     const prevDepsRef = useRef([]);
 
@@ -65,12 +63,11 @@ export default function createModel(model) {
 
   return {
     Provider,
-    ClassConsumer,
     useModel,
   };
 }
 
-export class ObservableContext {
+export class ObservableValue {
   observers;
   state;
 
@@ -91,11 +88,11 @@ export function getContexts(model) {
   if (ContextRegistry.has(model)) {
     return ContextRegistry.get(model);
   } else {
-    const SpecContext = createContext(new ObservableContext());
-    const CommonContext = createContext(null);
+    const ObservableContext = createContext(new ObservableValue());
+    const IntrinsicContext = createContext(null);
     const ret = {
-      SpecContext,
-      CommonContext,
+      ObservableContext,
+      Context: IntrinsicContext,
     };
     ContextRegistry.set(model, ret);
     return ret;

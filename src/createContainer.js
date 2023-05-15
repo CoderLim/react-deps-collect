@@ -5,7 +5,6 @@ export default function createContainer(useHook) {
 
   const Provider = function Provider({ initState, children }) {
     const state = useHook();
-
     return (
       <Context.Provider value={state}>
         {children}
