@@ -38,7 +38,7 @@ export default function createContainer(useHook) {
    * 
    * @param _depCb 返回依赖列表，当依赖有变化时，触发组件渲染
    */
-  const useModel = function (_depCb) {
+  const useContainer = function (_depCb) {
     const depCp = useCallback(_depCb, []);
 
     const observableValue = useContext(ObservableContext);
@@ -67,6 +67,6 @@ export default function createContainer(useHook) {
 
   return {
     Provider,
-    useModel,
+    useContainer,
   };
 }
